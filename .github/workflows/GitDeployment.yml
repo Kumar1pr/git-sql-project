@@ -48,7 +48,9 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 mssql-tools
           echo 'PATH="$PATH:/opt/mssql-tools/bin"' >> $GITHUB_PATH
-
+      - name: Add mssql-tools to PATH
+        run: echo "/opt/mssql-tools/bin" >> $GITHUB_PATH
+        
       - name: Connect to Azure SQL Database
         env:
           AZURE_SQL_SERVER: ${{ secrets.DB_HOSTNAME }}
