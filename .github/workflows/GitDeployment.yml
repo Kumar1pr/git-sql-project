@@ -1,9 +1,10 @@
 name: GitDeployment
 run-name: Setting up the GitDeployment Database
-on:[push]
+on: push
+
 jobs:
   test-output:
     runs-on: ubuntu-latest
     steps:
-    - name: Test output
-      run: echo"Here is a test"
+      - name: Test output
+        run: echo "Here is a test"
