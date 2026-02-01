@@ -17,7 +17,7 @@ jobs:
       - name: Connect to Local MS SQL Server
         shell: pwsh
         env:
-          LOCAL_SQL_SERVER: ${{ secrets.LOCAL_SQL_SERVER }}
+          LOCAL_SQL_SERVER: ${{ secrets.DB_HOSTNAME }}
           LOCAL_SQL_USER: ${{ secrets.DB_USER }}
           LOCAL_SQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
