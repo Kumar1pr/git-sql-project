@@ -1,0 +1,22 @@
+## Visual Studio Temporary Files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## SSDT / SQL Server Build Outputs
+bin/
+obj/
+*.dacpac
+*.publish.xml
+
+## SQL Server Management Studio (SSMS) 
+*.ssmssln
+*.ssmssqlproj
+*.ssmsbackup
+
+## Backup and Temp Files
+*.bak
+*.log
+*.tmp
