@@ -1,9 +1,59 @@
 name: GitDeployment
 run-name: Setting up the GitDeployment Database
-on:[push]
+on: [push]
+
 jobs:
   test-output:
     runs-on: ubuntu-latest
     steps:
-    - name: Test output
-      run: echo"Here is a test"
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install sqlcmd (mssql-tools)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl apt-transport-https gnupg
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 mssql-tools
+          echo 'PATH="$PATH:/opt/mssql-tools/bin"' >> $GITHUB_PATH
+
+      - name: Test SQL Server connection
+        env:
+          DB_HOSTNAME: ${{ secrets.DB_HOSTNAME }}
+          SQL_USER: ${{ secrets.SQL_USER }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          sqlcmd -S "$DB_HOSTNAME" -U "$SQL_USER" -P "$SQL_PASSWORD" -Q "SELECT @@VERSION"
+
+      - name: Run create database script
+        env:
+          DB_HOSTNAME: ${{ secrets.DB_HOSTNAME }}
+          SQL_USER: ${{ secrets.SQL_USER }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+        run: |
+          sqlcmd -S "$DB_HOSTNAME" -U "$SQL_USER" -P "$SQL_PASSWORD" -i database/Script_Create_Database.sql
+
+  connect-local-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install SqlServer PowerShell module
+        shell: pwsh
+        run: |
+          Install-Module -Name SqlServer -Force -Scope CurrentUser -AllowClobber
+
+      - name: Show databases on local SQL Server
+        shell: pwsh
+        env:
+          LOCAL_SQL_SERVER: ${{ secrets.LOCAL_SQL_SERVER }}
+          LOCAL_SQL_USER: ${{ secrets.LOCAL_SQL_USER }}
+          LOCAL_SQL_PASSWORD: ${{ secrets.LOCAL_SQL_PASSWORD }}
+        run: |
+          Import-Module SqlServer
+          $server = $env:LOCAL_SQL_SERVER
+          if (-not $server) { $server = 'localhost' }
+          Invoke-Sqlcmd -ServerInstance $server -Username $env:LOCAL_SQL_USER -Password $env:LOCAL_SQL_PASSWORD -Query "SELECT name FROM sys.databases;"
