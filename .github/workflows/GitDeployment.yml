@@ -3,8 +3,32 @@ run-name: Setting up the GitDeployment Database
 on: [push]
 
 jobs:
-  test-output:
-    runs-on: ubuntu-latest
+  connect-local-mssql:
+    runs-on: windows-latest
     steps:
-      - name: Test Output
-        run: echo "Here is a test"
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install SqlServer PowerShell module
+        shell: pwsh
+        run: |
+          Install-Module -Name SqlServer -Force -Scope CurrentUser -AllowClobber
+
+      - name: Connect to Local MS SQL Server
+        shell: pwsh
+        env:
+          LOCAL_SQL_SERVER: ${{ secrets.LOCAL_SQL_SERVER }}
+          LOCAL_SQL_USER: ${{ secrets.DB_USER }}
+          LOCAL_SQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          Import-Module SqlServer
+          $server = $env:LOCAL_SQL_SERVER
+          if (-not $server) { $server = 'localhost' }
+          Write-Host "Connecting to SQL Server: $server"
+          $result = Invoke-Sqlcmd -ServerInstance $server -Username $env:LOCAL_SQL_USER -Password $env:LOCAL_SQL_PASSWORD -Query "SELECT @@VERSION as [SQL Server Version];"
+          if ($result) {
+            Write-Host "✓ Connection successful!"
+            Write-Host $result
+          } else {
+            throw "Failed to connect to SQL Server"
+          }
